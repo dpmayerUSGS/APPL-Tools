@@ -42,9 +42,32 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+#VS cache
+.vs
+
 
 # Build Files
-###############
-**/Debug/**
-**/ipch/**
-**/x64/**
+[Dd]ebug/
+[Db]ebugPublic
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Rr]lease/
+[Rr]leases/
+
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx

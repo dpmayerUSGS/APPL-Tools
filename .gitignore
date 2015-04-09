@@ -45,8 +45,6 @@ Temporary Items
 
 # Build Files
 ###############
-*.exe
-*.exe.*
-Debug/*
-ipch/*
-x64/*
+**/Debug/**
+**/ipch/**
+**/x64/**

@@ -1,3 +1,8 @@
+This is a basic GXP template from which other projects can be derived.  Note that the required build information is setup for
+our internal systems.
+
+The remainder of the README is Visual Studio generated.
+
 ========================================================================
     CONSOLE APPLICATION : GXPTemplate Project Overview
 ========================================================================

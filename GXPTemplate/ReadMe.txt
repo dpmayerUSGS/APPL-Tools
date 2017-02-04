@@ -27,7 +27,7 @@ GXPTemplate.vcxproj.filters
     "Source Files" filter).
 
 GXPTemplate.cpp
-    This is the main application source file.
+    available from devkit.
 
 /////////////////////////////////////////////////////////////////////////////
 Other standard files:

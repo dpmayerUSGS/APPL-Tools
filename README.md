@@ -3,6 +3,6 @@ Socet GXP code, tutorials and required data as created by the Astrogeology Scien
 
 This site is intended to document progress for our transition from SOCET SET to SOCET GXP. Please see the Wiki and Issue sections of this site to follow our progress. Any camera model releases will also be posted here.
 
-For questions please comment or email PlanetaryPhotogrammetry at usgs.gov
+To join this effort or if you have questions please email PlanetaryPhotogrammetry at usgs.gov
 
 

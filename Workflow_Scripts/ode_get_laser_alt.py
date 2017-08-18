@@ -14,8 +14,8 @@
 # ******************************************************************************
 
 import argparse
-from osgeo import gdal,ogr,osr  # 3rd party library
-import requests                 # 3rd party library
+from osgeo import gdal,osr  # 3rd party library
+import requests             # 3rd party library
 import sys
 
 gdal.UseExceptions()

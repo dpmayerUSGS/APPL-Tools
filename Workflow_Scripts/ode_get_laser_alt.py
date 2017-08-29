@@ -297,7 +297,7 @@ if command_line_args.mode == 'target':
 
 
 elif command_line_args.mode == 'status':
-    print("Attempting to check status of JobId " + command_line_args.jobid[0])
+    print("Attempting to check status of JobId " + str(command_line_args.jobid[0]))
     payload = {'jobid': command_line_args.jobid[0],
                'output': 'json'}
 else:

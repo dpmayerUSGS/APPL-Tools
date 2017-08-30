@@ -50,10 +50,6 @@ KNOWN ISSUES:
 Passing in images with a polar stereographic projection or that straddle one of the poles will yield undesirable results. 
 Users should instead manually specify bounding coordinates for areas over the poles.\n
 
-Queries of MLA data with minlat and westernlon in the range 0.0-0.1 degrees take an unreasonably long time to complete (>12 hours), 
-even over very small search regions. This is a bug on the ODE side. 
-Users needing MLA data from this area should buffer their search region by at least 0.2 degrees in order to work around this behavior.
-
 The script has no way of determining if a raster passed as input contains data from the same target body 
 specified on the command line. Thus, one could pass in an image of Mars as input but specify "Moon" as the target, 
 and the script will return LOLA data within the latitude and longitude bounds that define the Mars image. 

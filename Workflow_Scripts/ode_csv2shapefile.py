@@ -36,6 +36,7 @@
 #
 #_HIST
 #        Aug 17 2017 - Trent Hare (thare@usgs.gov) - original version
+#        Sep 14 2017 - added MLA support
 #
 #_LICENSE
 #        Public domain (unlicense)
@@ -84,7 +85,7 @@ def parse_arguments():
              epilog="""EXAMPLES:
              %(prog)s Mars --input ode_lolardr.csv 
              %(prog)s Moon --input ode_molapedr.csv
-             %(prog)s Mars --pattern "*_pts_csv.csv"
+             %(prog)s Mercury --pattern "*_pts_csv.csv"
     
     """)
     
@@ -119,7 +120,7 @@ else:
     sys.exit(1)
     
 if target == "mars":
-    target = "Mars"
+    targetWKT = "Mars"
     majorRadius = 3396190.0 
     minorRadius = 3376200.0
     year = 2000
@@ -132,19 +133,19 @@ if target == "mars":
     utcField = 'UTC'
     orbitField = 'ORBIT'
 elif target == "mercury":
-    target = "Mercury"
-    majorRadius = majorRadius = 2439400.0
+    targetWKT = "Mercury"
+    majorRadius = minorRadius = 2439400.0
     year = 2015
     #From ode Mercury run the fields should be:
-    #???
-    longField = ''
-    latField = ''
-    elevField = ''
-    radiusField = ''
-    utcField = ''
-    orbitField = ''
+    #longitude,latitude,altitude,radius,EphemerisTime,MET,frm,chn,Pulswd,thrsh,gain,1way_range,Emiss,TXmJ,UTC,TOF_ns_ET,Sat_long,Sat_lat,Sat_alt,Offnad,Phase,Sol_inc,SCRNGE,seqid,Product_id
+    longField = 'longitude'
+    latField = 'latitude'
+    elevField = 'altitude'
+    radiusField = 'radius'
+    utcField = 'UTC'
+    orbitField = 'chn'
 elif target == "moon":
-    target = "Moon"
+    targetWKT = "Moon"
     majorRadius = minorRadius = 1737400.0 
     year = 2000
     #From ode Moon run the fields should be:
@@ -164,11 +165,11 @@ else:
 if majorRadius - minorRadius > 0.00001:
     ecc = majorRadius / (majorRadius - minorRadius)
     thePrj = 'GEOGCS["{0}{1}",DATUM["D_{0}{1}",SPHEROID["{0}{1}_IAU",{2:.1f},{3:.14f}]],PRIMEM["Reference_Meridian",0.0],UNIT["Degree",0.0174532925199433]]' \
-             .format(target,year,majorRadius,ecc)
+             .format(targetWKT,year,majorRadius,ecc)
 else:
     ecc = 0.0
     thePrj = 'GEOGCS["{0}{1}",DATUM["D_{0}{1}",SPHEROID["{0}{1}_IAU",{2:.1f},{3:.1f}]],PRIMEM["Reference_Meridian",0.0],UNIT["Degree",0.0174532925199433]]' \
-             .format(target,year,majorRadius,ecc)
+             .format(targetWKT,year,majorRadius,ecc)
                  
 #loop over files, if the user passed --input then just one file
 for input in files:
@@ -198,15 +199,25 @@ for input in files:
             lon180 = LonTo180(float(row[longField]))
             latOG = float(row[latField])
             #if Mars convert to ographic Latitudes
-            if target == "Mars":
+            if target == "mars":
                 latOG = oc2og(latOG, majorRadius, minorRadius)
                 newl = '{0:.5f},{1:.5f},'.format(lon180, latOG)
                 newl = newl + row[elevField]+','+row[radiusField]+','+row[utcField]+','+row[orbitField]
-            if target == "Moon":
+            if target == "moon":
                 #convert radius from km to meters
                 radius = float(row[radiusField]) * 1000.0
                 #subtract radius from LOLA radius to get 'elevation' in meters
                 elev = radius - majorRadius
+                newl = '{0:.5f},{1:.5f},{2:.5f},{3:.2f},'.format(lon180, latOG, elev, radius)
+                newl = newl + row[utcField] +','+ row[orbitField]
+            if target == "mercury":
+                #convert radius from km to meters
+                radius = float(row[radiusField]) * 1000.0
+                #subtract radius from LOLA radius to get 'elevation' in meters
+                #elev = radius - majorRadius
+                        #OR
+                #convert elevation from km to meters
+                elev = float(row[elevField]) * 1000.0
                 newl = '{0:.5f},{1:.5f},{2:.5f},{3:.2f},'.format(lon180, latOG, elev, radius)
                 newl = newl + row[utcField] +','+ row[orbitField]
             outCSV.write(newl+'\n')

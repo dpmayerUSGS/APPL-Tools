@@ -3,35 +3,40 @@
 #_TITLE  ode_csv2shapefile.py
 #
 #_ARGS  
-#  target
-#  input csv (as downloaded from the PDS ODE using ode_get_laser_alt.py)
+#  target =  Mars | Moon | Mercury
+#  --input input.csv (as downloaded from PDS ODE using ode_get_laser_alt.py)
 #
 #_USER  Command line options [optional parameters]:
 #   target:  {Mars, Moon, Mercury}
 #   --input input.csv
 #  
 #   ode_csv2shapefile.py target --input in.csv
-#   ode_csv2shapefile.py Mare --input LolaRDR_24N25N_341E342E_pts_csv.csv
+#   ode_csv2shapefile.py Moon --input LolaRDR_24N25N_341E342E_pts_csv.csv
+#   ode_csv2shapefile.py Mars --input MOLApedr_24N25N_341E342E_pts_csv.csv
+#   -- to convert many files
+#   ode_csv2shapefile.py Mars --pattern "*_pts_csv.csv"
 #
 #_REQUIRES
 #        Python 3.x and argparse
-#        GDAL binaries: ogr2ogr 
-#        --recommended Anaconda Python 3.x environment w/ gdal
+#        GDAL for Python 
+#        --recommended Anaconda Python 3.x environment w/ gdal, once installed:
+#        $ conda install -c conda-forge gdal 
 #
 #_DESC 
-#        Convert from a CSV to an Esri shapefileZ.
+#        Convert from a ODE lidar shot CSV to an Esri shapefile PointZ.
 #        The CSV is expected to be created using ode_get_laser_alt.py which
 #        uses the PDS ODE REST calls to download LOLA, MOLA, and MLA laser
 #        altimeter pont shots. for more: http://oderest.rsl.wustl.edu/
 #
-#        For all bodies all Longitudes will by from -180 to 180. For Mars
-#        Latitudes are converted from ocentric to ographic.
+#        For all bodies, Longitudes will be converted to -180 to 180.
+#        For Mars, latitudes are converted from ocentric to ographic. This
+#        can be easily changed below.
 #
 #_CALLS  List of calls:
-#        ogr2ogr
 #
 #_HIST
 #        Aug 17 2017 - Trent Hare (thare@usgs.gov) - original version
+#        Sep 14 2017 - added MLA support
 #
 #_LICENSE
 #        Public domain (unlicense)
@@ -72,32 +77,37 @@ def LonTo180(dlon):
         dlon = dlon - 360.0
     return dlon
 
-## Parse commandline args with argparse
-parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-         description="""Convert ODE created LOLA, MOLA, or MLA shot data to an Esri pointZ Shapefile.
-The CSV is expected to be generated from the script ode_get_laser_alt.py""",
-         epilog="""EXAMPLES:
-         %(prog)s Mars --input ode_lolardr.csv 
-         %(prog)s Moon --input ode_molapedr.csv
-         %(prog)s Moon --pattern "*_pts_csv.csv"
+def parse_arguments():
+    ## Parse commandline args with argparse
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+             description="""Convert ODE created LOLA, MOLA, or MLA shot data to an Esri pointZ Shapefile.
+    The CSV is expected to be generated from the script ode_get_laser_alt.py""",
+             epilog="""EXAMPLES:
+             %(prog)s Mars --input ode_lolardr.csv 
+             %(prog)s Moon --input ode_molapedr.csv
+             %(prog)s Mercury --pattern "*_pts_csv.csv"
+    
+    """)
+    
+    #parser.add_argument('product', choices=["lolardr","molapedr","mla"], 
+    #                    help="Specify desired product type: LOLA RDR or MOLA PEDR")
+    parser.add_argument('target', choices=["mars","moon","mercury"], 
+                        type = str.lower, 
+                        help="Specify which target: Mars, Moon, Mercury")
+    
+    ## User must specify exactly one of --coords or --raster
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--input', nargs=1, metavar="file.csv",
+                        help='an input ODE csv file as downloaded using ode_get_laser_alt.py.')
+    group.add_argument('--pattern',  nargs=1, metavar='"*_pts_csv.csv"', 
+                        default='"*_pts_csv.csv"', dest='pattern',
+                        help='pattern to find and run on many strings. Default pattern is "*_pts_csv.csv".')
+    
+    args = parser.parse_args()
+    return args
 
-""")
 
-#parser.add_argument('product', choices=["lolardr","molapedr","mla"], 
-#                    help="Specify desired product type: LOLA RDR or MOLA PEDR")
-parser.add_argument('target', choices=["mars","moon","mercury"], 
-                    type = str.lower, 
-                    help="Specify which target: Mars, Moon, Mercury")
-
-## User must specify exactly one of --coords or --raster
-group = parser.add_mutually_exclusive_group(required=False)
-group.add_argument('--input', nargs=1, metavar="file.csv",
-                    help='an input ODE csv file as downloaded using ode_get_laser_alt.py.')
-group.add_argument('--pattern',  nargs=1, metavar='"*_pts_csv.csv"', 
-                    default='"*_pts_csv.csv"', dest='pattern',
-                    help='pattern to find and run on many strings. Default pattern is "*_pts_csv.csv".')
-
-args = parser.parse_args()
+args = parse_arguments()
 target = args.target
 
 if args.input is not None:
@@ -106,11 +116,11 @@ elif args.pattern is not None:
     pattern = args.pattern[0]
     files = glob.glob(pattern)
 else:
-    parser.print_usage()
+    argparse.parser.print_usage()
     sys.exit(1)
     
 if target == "mars":
-    target = "Mars"
+    targetWKT = "Mars"
     majorRadius = 3396190.0 
     minorRadius = 3376200.0
     year = 2000
@@ -123,19 +133,19 @@ if target == "mars":
     utcField = 'UTC'
     orbitField = 'ORBIT'
 elif target == "mercury":
-    target = "Mercury"
-    majorRadius = majorRadius = 2439400.0
+    targetWKT = "Mercury"
+    majorRadius = minorRadius = 2439400.0
     year = 2015
     #From ode Mercury run the fields should be:
-    #???
-    longField = ''
-    latField = ''
-    elevField = ''
-    radiusField = ''
-    utcField = ''
-    orbitField = ''
+    #longitude,latitude,altitude,radius,EphemerisTime,MET,frm,chn,Pulswd,thrsh,gain,1way_range,Emiss,TXmJ,UTC,TOF_ns_ET,Sat_long,Sat_lat,Sat_alt,Offnad,Phase,Sol_inc,SCRNGE,seqid,Product_id
+    longField = 'longitude'
+    latField = 'latitude'
+    elevField = 'altitude'
+    radiusField = 'radius'
+    utcField = 'UTC'
+    orbitField = 'chn'
 elif target == "moon":
-    target = "Moon"
+    targetWKT = "Moon"
     majorRadius = minorRadius = 1737400.0 
     year = 2000
     #From ode Moon run the fields should be:
@@ -148,18 +158,18 @@ elif target == "moon":
     orbitField = 'S' #not named correctly in the CSV, should be PRODUCT_SHOT_NUMBER
 else:
     print("Error: " + target + " currently not supported.")
-    parser.print_usage()
+    argparse.parser.print_usage()
     sys.exit(1)
     
 #based on target and radius write out projection
 if majorRadius - minorRadius > 0.00001:
     ecc = majorRadius / (majorRadius - minorRadius)
     thePrj = 'GEOGCS["{0}{1}",DATUM["D_{0}{1}",SPHEROID["{0}{1}_IAU",{2:.1f},{3:.14f}]],PRIMEM["Reference_Meridian",0.0],UNIT["Degree",0.0174532925199433]]' \
-             .format(target,year,majorRadius,ecc)
+             .format(targetWKT,year,majorRadius,ecc)
 else:
     ecc = 0.0
     thePrj = 'GEOGCS["{0}{1}",DATUM["D_{0}{1}",SPHEROID["{0}{1}_IAU",{2:.1f},{3:.1f}]],PRIMEM["Reference_Meridian",0.0],UNIT["Degree",0.0174532925199433]]' \
-             .format(target,year,majorRadius,ecc)
+             .format(targetWKT,year,majorRadius,ecc)
                  
 #loop over files, if the user passed --input then just one file
 for input in files:
@@ -189,13 +199,25 @@ for input in files:
             lon180 = LonTo180(float(row[longField]))
             latOG = float(row[latField])
             #if Mars convert to ographic Latitudes
-            if target == "Mars":
+            if target == "mars":
                 latOG = oc2og(latOG, majorRadius, minorRadius)
                 newl = '{0:.5f},{1:.5f},'.format(lon180, latOG)
                 newl = newl + row[elevField]+','+row[radiusField]+','+row[utcField]+','+row[orbitField]
-            if target == "Moon":
+            if target == "moon":
+                #convert radius from km to meters
                 radius = float(row[radiusField]) * 1000.0
+                #subtract radius from LOLA radius to get 'elevation' in meters
                 elev = radius - majorRadius
+                newl = '{0:.5f},{1:.5f},{2:.5f},{3:.2f},'.format(lon180, latOG, elev, radius)
+                newl = newl + row[utcField] +','+ row[orbitField]
+            if target == "mercury":
+                #convert radius from km to meters
+                radius = float(row[radiusField]) * 1000.0
+                #subtract radius from LOLA radius to get 'elevation' in meters
+                #elev = radius - majorRadius
+                        #OR
+                #convert elevation from km to meters
+                elev = float(row[elevField]) * 1000.0
                 newl = '{0:.5f},{1:.5f},{2:.5f},{3:.2f},'.format(lon180, latOG, elev, radius)
                 newl = newl + row[utcField] +','+ row[orbitField]
             outCSV.write(newl+'\n')

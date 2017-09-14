@@ -2,10 +2,8 @@
 Collection of Python workflow script written for SocetGXP
 
 Scripts:
-  
-         ode_get_laser_alt.py
-  
-         ode_csv2shapefile.py
+  ode_get_laser_alt.py
+  ode_csv2shapefile.py
 
 
 
@@ -37,11 +35,9 @@ optional arguments:
 
 EXAMPLES:
   Search for LOLA shots based on bounding coordinates
-      
       ode_get_laser_alt.py moon --coords 44.0 44.1 340.5 340.6 
 
   Search for MOLA shots by passing a GeoTIFF and let the script calculate the lat/lon bounds of the image
-      
       ode_get_laser_alt.py mars --raster my_projected_image.tif
 
 KNOWN ISSUES:
@@ -80,9 +76,6 @@ optional arguments:
                         pattern is "*_pts_csv.csv".
 
 EXAMPLES:
-
          ode_csv2shapefile.py Mars --input ode_lolardr.csv 
-
          ode_csv2shapefile.py Moon --input ode_molapedr.csv
-         
          ode_csv2shapefile.py Moon --pattern "*_pts_csv.csv"

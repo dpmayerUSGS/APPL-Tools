@@ -171,7 +171,7 @@ def pedrcsv2vrt(csv,prj,fields,x=None,y=None,z=None):
     layer.set('name', path.basename(path.splitext(csv)[0]) )
     ET.SubElement(layer,'SrcDataSource').text = csv
     ET.SubElement(layer,'LayerSRS').text = prj
-    ET.SubElement(layer,'GeometryType').text = 'wkbPoint'
+    ET.SubElement(layer,'GeometryType').text = 'wkbPoint25D'
     geom_field = ET.SubElement(layer,'GeometryField')
     geom_field.set('encoding','PointFromColumns')
     geom_field.set('x', x)

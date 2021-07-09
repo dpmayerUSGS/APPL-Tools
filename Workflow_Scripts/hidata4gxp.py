@@ -235,15 +235,6 @@ def main(user_args):
 
     print(stereo_minlat,stereo_maxlat,stereo_minlon,stereo_maxlon)
 
-    # @TODO Delete this debug block before committing
-    ### DEBUG ###
-    # Mocking extent for testing
-    # stereo_minlon = float(-10.5)
-    # stereo_minlat = float(-10.5)
-    # stereo_maxlon = float(10.5)
-    # stereo_maxlat = float(10.5)
-    #############
-
     # Stereo coverage that straddles +/-180 degrees longitude is currently unsupported
     if (minlon == -180) and (maxlon == 180):
         print("\nERROR: Unable to compute longitude bounds of stereo coverage. \nAll images cross the 180 degree longitude line. \n")
@@ -253,9 +244,6 @@ def main(user_args):
     if not os.path.exists('MOLA_DEM'):
         os.mkdir('MOLA_DEM')
 
-    # @TODO Things like paths to reference data should be stored in a config.py file and imported
-    # mola_delta_radius_iau = '/scratch/dpmayer/APPL-Tools_dev/mola_256ppd_latlon_88lat_DeltaRadiusIAUSphere.tif'
-    
     # Get spatial reference object defining a geographic SRS for Mars based on mola_delta_radius_iau
     mola_ds = gdal.Open(mola_delta_radius_iau)
     tsrs = mola_ds.GetSpatialRef()
@@ -316,8 +304,6 @@ def main(user_args):
                  f=169.8944472236118)
 
     # 2. Run pedr2tab
-    # @TODO Things like paths to reference data should be stored in a config.py file and imported
-    # pedr_list = '/scratch/dpmayer/GLOBAL_MOLA_PEDR/pedr_list.lis'
     run_pedr2tab([pedr_list])
 
     # 3. Read PEDR output into pandas DataFrame and do some conditioning

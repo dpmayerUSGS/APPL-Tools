@@ -80,9 +80,7 @@ are aligned to MOLA shot data referenced to the geoid, the "--max-displacement" 
 def main(user_args):
 
     ref_dtm = user_args.ref_dtm
-    # ref_format = user_args.ref_format
     socet_dtm = user_args.socet_dtm
-    # socet_format = user_args.socet_format
     socet_gpf = user_args.socet_gpf
     tfm_socet_gpf = user_args.tfm_socet_gpf
     all_points = user_args.all_points
